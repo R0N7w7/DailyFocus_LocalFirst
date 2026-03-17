@@ -1,39 +1,51 @@
-import TaskCard from "@/components/TaskCard"
+import { useState } from "react"
+import TaskItem from "@/components/TaskItem"
 import { Button } from "@/components/ui/button";
-import { useAddTask, useTasks } from "@/queries/task.queries";
+import { Input } from "@/components/ui/input";
+import { useAddTask, useTasks} from "@/queries/task.queries";
 import type { Task } from "@/types/task";
 
 export const HomePage = () => {
-    const task = useTasks();
+    const tasksQuery = useTasks();
     const addTask = useAddTask();
 
-    if (task.isLoading) {
+    const [title, setTitle] = useState("")
+    const [description, setDescription] = useState("")
+
+    if (tasksQuery.isLoading) {
         return <div>Loading...</div>
     }
 
     const handleAddTask = () => {
-        // mock adding a task
-        const newTask: Task = {
-            title: "New Task",
-            description: "This is a new task",
+        if (!title.trim()) return
+
+        const newTask: Omit<Task, 'id'> = {
+            title: title.trim(),
+            description: description.trim(),
             completed: false,
-            createdAt: 0
+            createdAt: Date.now(),
         }
 
-        addTask.mutate(newTask);
+        addTask.mutate(newTask)
+        setTitle("")
+        setDescription("")
     }
 
     return (
-        <div>
-            <h1>Home Page</h1>
-            <ul>
-                {task.data?.map((task) => (
-                    <li key={task.id}>
-                        <TaskCard task={task} />
-                    </li>
+        <div className="space-y-4">
+            <h1 className="text-2xl font-bold">Lista de tareas</h1>
+
+            <div className="flex gap-2">
+                <Input placeholder="Título" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <Input placeholder="Descripción (opcional)" value={description} onChange={(e) => setDescription(e.target.value)} />
+                <Button onClick={handleAddTask}>Añadir</Button>
+            </div>
+
+            <div className="grid gap-2">
+                {tasksQuery.data?.map((task) => (
+                    <TaskItem key={task.id} task={task} />
                 ))}
-            </ul>
-            <Button onClick={handleAddTask}>Add Task</Button>
+            </div>
         </div>
     )
 }
