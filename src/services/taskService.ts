@@ -1,7 +1,7 @@
 import { db } from "@/data/db"
 import type { Task } from "@/types/task"
 
-export class TaskService {
+class TaskService {
     async getAllTasks(): Promise<Task[]> {
         return db.tasks.toArray()
     }
@@ -22,3 +22,5 @@ export class TaskService {
         return db.tasks.delete(id)
     }
 }
+
+export const taskService = new TaskService()
