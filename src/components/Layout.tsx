@@ -1,18 +1,16 @@
 import { Outlet } from 'react-router-dom';
-import { Navigation } from './Navigation';
 
 export function Layout() {
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
-            <Navigation />
+        <div className="relative min-h-screen overflow-hidden bg-neutral-100">
+            <div className="pointer-events-none absolute -left-24 top-32 h-72 w-72 rounded-full  blur-3xl" />
+            <div className="pointer-events-none absolute -right-16 top-10 h-64 w-64 rounded-full blur-3xl" />
 
-            <main className="grow container mx-auto p-4 md:p-8">
-                <Outlet />
+            <main className="relative z-10 grow container mx-auto p-4 md:p-8">
+                <div className="mx-auto max-w-4xl">
+                    <Outlet />
+                </div>
             </main>
-
-            <footer className="bg-gray-200 p-4 text-center text-gray-600 border-t">
-                {new Date().getFullYear()} | Vite React Template by @RonConCoca
-            </footer>
         </div>
     );
 }
