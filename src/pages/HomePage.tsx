@@ -76,12 +76,12 @@ export const HomePage = () => {
             </Card>
 
             <form onSubmit={handleAddTask}>
-                <Card className="shadow-md backdrop-blur-sm">
-                    <CardHeader className="pb-4">
+                <Card className="shadow-md backdrop-blur-sm px-0 py-4">
+                    <CardHeader className="pb-4 px-4">
                         <CardTitle className="text-lg font-semibold text-slate-800">Agregar tarea</CardTitle>
                         <CardDescription>Registra una accion concreta para avanzar hoy.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-3 px-4">
                         <Input
                             placeholder="Ej: Enviar propuesta al cliente"
                             value={title}
