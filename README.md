@@ -1,123 +1,202 @@
-# Vite + React + TypeScript + Tailwind + shadcn/ui + Router Template
+# Daily Focus
 
-A minimal, production‑oriented starter for building modern React applications. It ships with sensible defaults, a clean folder structure, and a small set of ready‑to‑use UI primitives so you can start shipping features immediately.
+Daily Focus is a local-first task management app built with React, TypeScript, Dexie, and TanStack Query.  
+It helps you capture, complete, and review daily tasks with a clean UI and instant data updates.
 
-## What’s included
+## Why this project is different
 
-- Vite for fast dev server and optimized builds
-- React 19 with TypeScript for type‑safe development
-- React Router for client-side routing
-- Tailwind CSS (utility-first styling)
-- shadcn/ui primitives (Button, Card, Input) composed with Tailwind
-- ESLint configured for React and TypeScript
+The app uses **TanStack Query as the data orchestration layer across the entire UI**.
 
-## Project structure
+Even though persistence is local (IndexedDB via Dexie), TanStack Query gives the app:
 
+- a centralized cache for tasks
+- consistent loading and mutation states
+- automatic UI refresh through query invalidation
+- reusable data hooks (`useTasks`, `useAddTask`, `useUpdateTask`, `useDeleteTask`)
+
+This architecture keeps components simple and makes it easy to switch from local DB to remote APIs later.
+
+## Tech stack
+
+- React 19 + TypeScript
+- Vite
+- React Router
+- TanStack Query
+- Dexie (IndexedDB)
+- Tailwind CSS + Radix-style UI primitives
+- ESLint
+
+## Architecture overview
+
+The project follows a layered frontend architecture:
+
+1. **UI Layer** (`components`, `pages`)  
+	Renders views, handles user interactions, and consumes query hooks.
+2. **Query Layer** (`queries/task.queries.ts`)  
+	Encapsulates read/write operations with `useQuery` and `useMutation`.
+3. **Service Layer** (`services/taskService.ts`)  
+	Defines data access methods (`getAllTasks`, `addTask`, `updateTask`, etc.).
+4. **Persistence Layer** (`data/db.ts`)  
+	Dexie schema and IndexedDB setup.
+5. **Domain Layer** (`types/task.ts`)  
+	Shared task types used across app layers.
+
+### Data flow
+
+```text
+HomePage/TaskItem -> TanStack Query hooks -> taskService -> Dexie -> IndexedDB
+										^
+										|
+						  Query cache + invalidation
 ```
+
+## TanStack Query usage in this app
+
+TanStack Query is initialized at application bootstrap with `QueryClientProvider`.
+
+### Queries
+
+- `useTasks()`
+  - `queryKey: ['tasks']`
+  - Returns all tasks for the main list and summary cards.
+- `useTask(id)`
+  - `queryKey: ['task', id]`
+  - Returns a single task by id.
+
+### Mutations
+
+- `useAddTask()`
+  - Adds a task through the service layer.
+  - Invalidates `['tasks']` on success.
+- `useUpdateTask()`
+  - Updates a task (for completion toggle).
+  - Invalidates `['tasks']` and `['task', id]`.
+- `useDeleteTask()`
+  - Deletes a task.
+  - Invalidates `['tasks']` and `['task', id]`.
+
+### Why invalidation matters here
+
+Instead of manually synchronizing component state after every write, mutations trigger invalidation and TanStack Query refetches fresh data. This keeps UI state trustworthy and reduces bugs caused by stale local state.
+
+## Project tree
+
+```text
 .
-├─ public/
-├─ src/
-│  ├─ components/
-│  │  ├─ Layout.tsx          # App shell (navbar, footer, content outlet)
-│  │  ├─ Navigation.tsx      # Top navigation
-│  │  └─ ui/                 # Minimal shadcn-style primitives
-│  │     ├─ button.tsx
-│  │     ├─ card.tsx
-│  │     └─ input.tsx
-│  ├─ data/
-│  │  └─ featureData.ts      # Example feature list
-│  ├─ lib/
-│  │  └─ utils.ts            # cn() helper
-│  ├─ pages/                  # Route pages
-│  │  ├─ HomePage.tsx
-│  │  ├─ FeaturesPage.tsx
-│  │  └─ AboutPage.tsx
-│  └─ routes/
-│     ├─ AppRoutes.tsx       # Route definitions
-│     └─ index.tsx           # Router bootstrap
+├─ components.json
+├─ eslint.config.js
 ├─ index.html
 ├─ package.json
-├─ tsconfig.json              # TypeScript config, includes @ path alias to src
-└─ vite.config.ts
+├─ README.md
+├─ tsconfig.app.json
+├─ tsconfig.json
+├─ tsconfig.node.json
+├─ vite.config.ts
+├─ dev-dist/
+├─ public/
+│  └─ vite.svg
+└─ src/
+	├─ App.css
+	├─ App.tsx
+	├─ index.css
+	├─ main.tsx
+	├─ components/
+	│  ├─ Layout.tsx
+	│  ├─ TaskItem.tsx
+	│  └─ ui/
+	│     ├─ badge.tsx
+	│     ├─ button.tsx
+	│     ├─ card.tsx
+	│     ├─ input.tsx
+	│     ├─ tabs.tsx
+	│     └─ textarea.tsx
+	├─ data/
+	│  └─ db.ts
+	├─ lib/
+	│  └─ utils.ts
+	├─ pages/
+	│  └─ HomePage.tsx
+	├─ queries/
+	│  └─ task.queries.ts
+	├─ routes/
+	│  ├─ AppRoutes.tsx
+	│  └─ index.tsx
+	├─ services/
+	│  └─ taskService.ts
+	└─ types/
+		└─ task.ts
 ```
-
-Path alias: imports starting with `@/` resolve to `src/`.
 
 ## Getting started
 
-Requirements: Node.js 18+ and npm.
+### Requirements
 
-Install dependencies:
+- Node.js 18+
+- npm
 
-```powershell
+### Install
+
+```bash
 npm install
 ```
 
-Start the development server:
+### Run in development
 
-```powershell
+```bash
 npm run dev
 ```
 
-Build for production:
+### Build for production
 
-```powershell
+```bash
 npm run build
 ```
 
-Preview the production build locally:
+### Preview production build
 
-```powershell
+```bash
 npm run preview
 ```
 
-Lint the project:
+### Lint
 
-```powershell
+```bash
 npm run lint
 ```
 
-## How it works
+## NPM scripts
 
-- Routing: `src/routes/AppRoutes.tsx` declares the app routes. `Layout.tsx` renders the shared navigation, page outlet, and footer. Pages live under `src/pages`.
-- Styling: Tailwind utility classes are used throughout. You can customize styles by editing classes directly in components.
-- UI components: A minimal set of shadcn-style primitives (`Button`, `Card`, `Input`) are included in `src/components/ui`. They are unopinionated and easy to extend.
-- Data: `src/data/featureData.ts` shows a simple pattern for static data used by pages.
+- `npm run dev`: starts Vite dev server
+- `npm run build`: TypeScript build + Vite production build
+- `npm run preview`: serves production bundle locally
+- `npm run lint`: runs ESLint
 
-## Adding a new page
+## Domain model
 
-1. Create a new file in `src/pages`, for example `ContactPage.tsx`.
-2. Add a route in `src/routes/AppRoutes.tsx` pointing to the page component.
-3. Optionally add a link in `src/components/Navigation.tsx`.
+`Task` fields:
 
-## Using shadcn-style UI primitives
+- `id?: number`
+- `title: string`
+- `description?: string`
+- `completed: boolean`
+- `createdAt: number`
+- `category?: string`
 
-- Import from `@/components/ui/*` and compose with Tailwind classes.
-- Example:
+## Current features
 
-```tsx
-import { Button } from '@/components/ui/button'
+- Add tasks with title and optional description
+- Toggle task completion
+- Delete tasks
+- Filter tasks by all/completed/pending
+- Dashboard counters (total/completed/pending)
+- Local persistence with IndexedDB
+- Automatic UI synchronization through TanStack Query cache invalidation
 
-export function Example() {
-	return <Button>Click me</Button>
-}
-```
+## Scaling notes
 
-To introduce additional primitives, add new files under `src/components/ui` following the same pattern.
+If you later move from Dexie to a backend API, most UI code can remain unchanged. You mainly replace service methods while keeping query keys and mutation patterns.
 
-## Conventions
+## License
 
-- Use `@/` import alias for paths under `src`.
-- Keep components small and composable.
-- Prefer Tailwind utilities over ad‑hoc CSS.
-- Co-locate small helpers under `src/lib`.
-
-## Deploying
-
-The `npm run build` command outputs static assets to `dist/`. Deploy the `dist/` folder to any static host (e.g., Netlify, Vercel, GitHub Pages, or your own server).
-
-## Troubleshooting
-
-- If imports like `@/components/...` fail, ensure your editor understands the TypeScript path alias and that the Vite dev server is running.
-- If Tailwind classes do not apply, restart the dev server after dependency or config changes.
+Private project.
 
